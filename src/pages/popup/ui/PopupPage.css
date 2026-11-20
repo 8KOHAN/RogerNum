@@ -1,0 +1,136 @@
+.popup-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.brand-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 16px;
+
+  background: linear-gradient(
+    135deg,
+    #352315 0%,
+    #493018 55%,
+    #352315 100%
+  );
+
+  border: 1px solid #98713a;
+  border-radius: 15px;
+
+  box-shadow:
+    0 5px 14px rgba(66, 42, 17, 0.12),
+    inset 0 1px 0 rgba(255, 229, 164, 0.12);
+}
+
+.brand-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #f4d78a,
+    transparent
+  );
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 46px;
+  height: 46px;
+
+  background: linear-gradient(
+    145deg,
+    #ffe9a3,
+    #e9bf57 45%,
+    #b77b22
+  );
+
+  border: 1px solid #ffedb8;
+  border-radius: 12px;
+
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+
+.brand-logo span {
+  color: #392514;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.brand-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.brand-title {
+  margin: 0;
+
+  color: #fff5df;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+}
+
+.brand-title span {
+  color: #edc45e;
+}
+
+.brand-subtitle {
+  margin: 0;
+
+  color: #c6ab7c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.brand-crown {
+  flex-shrink: 0;
+
+  color: #edc45e;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 3px 0;
+
+  color: #9d8969;
+  font-size: 9px;
+}
+
+.popup-footer span:first-child {
+  color: #76552a;
+  font-weight: 800;
+}
+
+.popup-footer span:last-child {
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
