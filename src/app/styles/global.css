@@ -1,16 +1,13 @@
 :root {
   font-family:
     Inter,
-    "Segoe UI",
+    'Segoe UI',
     system-ui,
     -apple-system,
     sans-serif;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-
-  color: #392514;
-  background: #fff8e9;
 }
 
 * {
@@ -24,11 +21,12 @@ body {
   margin: 0;
   padding: 0;
 
-  background: #fff8e9;
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
 body {
-  color: #392514;
+  min-height: 100vh;
 }
 
 #root {
@@ -42,4 +40,13 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+::selection {
+  color: var(--color-text);
+  background: var(--color-accent-soft);
 }

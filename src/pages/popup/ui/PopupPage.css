@@ -7,41 +7,37 @@
 
 .brand-header {
   position: relative;
+  z-index: 2;
+
   display: flex;
   align-items: center;
-  gap: 12px;
-  overflow: hidden;
+  gap: 10px;
+
+  width: 100%;
   padding: 16px;
 
-  background: linear-gradient(
-    135deg,
-    #352315 0%,
-    #493018 55%,
-    #352315 100%
-  );
-
-  border: 1px solid #98713a;
+  background: var(--gradient-header);
+  border: 1px solid var(--color-header-border);
   border-radius: 15px;
-
-  box-shadow:
-    0 5px 14px rgba(66, 42, 17, 0.12),
-    inset 0 1px 0 rgba(255, 229, 164, 0.12);
+  box-shadow: var(--shadow-header);
 }
 
 .brand-header::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 14px;
   right: 14px;
   height: 1px;
+  pointer-events: none;
 
   background: linear-gradient(
     90deg,
     transparent,
-    #f4d78a,
+    var(--color-header-accent),
     transparent
   );
+  opacity: 0.65;
 }
 
 .brand-logo {
@@ -53,23 +49,14 @@
   width: 46px;
   height: 46px;
 
-  background: linear-gradient(
-    145deg,
-    #ffe9a3,
-    #e9bf57 45%,
-    #b77b22
-  );
-
-  border: 1px solid #ffedb8;
+  background: var(--gradient-logo);
+  border: 1px solid var(--color-logo-border);
   border-radius: 12px;
-
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.18),
-    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow-logo);
 }
 
 .brand-logo span {
-  color: #392514;
+  color: var(--color-logo-text);
   font-size: 17px;
   font-weight: 900;
   letter-spacing: -1px;
@@ -86,7 +73,7 @@
 .brand-title {
   margin: 0;
 
-  color: #fff5df;
+  color: var(--color-header-title);
   font-size: 22px;
   font-weight: 800;
   line-height: 1.15;
@@ -94,23 +81,24 @@
 }
 
 .brand-title span {
-  color: #edc45e;
+  color: var(--color-header-accent);
 }
 
 .brand-subtitle {
   margin: 0;
 
-  color: #c6ab7c;
+  color: var(--color-header-subtitle);
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
 }
 
 .brand-crown {
   flex-shrink: 0;
 
-  color: #edc45e;
-  font-size: 25px;
+  color: var(--color-header-accent);
+  font-size: 23px;
   line-height: 1;
 }
 
@@ -121,12 +109,12 @@
   gap: 8px;
   padding: 1px 3px 0;
 
-  color: #9d8969;
+  color: var(--color-footer-text);
   font-size: 9px;
 }
 
 .popup-footer span:first-child {
-  color: #76552a;
+  color: var(--color-footer-brand);
   font-weight: 800;
 }
 

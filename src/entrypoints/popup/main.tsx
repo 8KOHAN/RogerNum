@@ -1,8 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { PopupPage } from '../../pages/popup';
+import { ThemeProvider } from '../../app/providers/theme/ThemeProvider';
+import '../../app/styles/theme.css';
 import '../../app/styles/global.css';
+import { PopupPage } from '../../pages/popup';
 
 const rootElement = document.getElementById('root');
 
@@ -12,6 +14,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <PopupPage />
+    <ThemeProvider>
+      <PopupPage />
+    </ThemeProvider>
   </StrictMode>,
 );
