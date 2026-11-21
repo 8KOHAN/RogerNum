@@ -1,0 +1,142 @@
+/* Shared numeric input with compact stepper */
+
+.ui-number-input {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  height: 43px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+
+  transition:
+    border-color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    box-shadow var(--interaction-transition-duration) var(--interaction-transition-easing);
+}
+
+.ui-number-input:hover {
+  border-color: var(--color-accent);
+}
+
+.ui-number-input:focus-within {
+  border-color: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.ui-number-input:has(.ui-number-input__field:disabled) {
+  opacity: 0.6;
+}
+
+.ui-number-input__field {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 10px;
+
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.ui-number-input__field::-webkit-inner-spin-button,
+.ui-number-input__field::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.ui-number-input__field::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
+}
+
+.ui-number-input__stepper {
+  display: flex;
+  flex: 0 0 27px;
+  flex-direction: column;
+  gap: 1px;
+  box-sizing: border-box;
+  margin: 4px 4px 4px 0;
+  padding-left: 3px;
+
+  border-left: 1px solid var(--color-border);
+}
+
+.ui-number-input .ui-number-input__stepper-button {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  padding: 0;
+
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+
+  cursor: pointer;
+
+  transition:
+    color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    background-color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    transform var(--interaction-transition-duration) var(--interaction-transition-easing);
+}
+
+.ui-number-input .ui-number-input__stepper-button + .ui-number-input__stepper-button {
+  border-top: 1px solid var(--color-border);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.ui-number-input .ui-number-input__stepper-button:hover:not(:disabled) {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  transform: scale(1.06);
+}
+
+.ui-number-input .ui-number-input__stepper-button:active:not(:disabled) {
+  background: var(--color-accent-border);
+  transform: scale(0.94);
+}
+
+.ui-number-input .ui-number-input__stepper-button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: -2px;
+}
+
+.ui-number-input .ui-number-input__stepper-button:disabled {
+  color: var(--color-text-subtle);
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.ui-number-input__stepper-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+

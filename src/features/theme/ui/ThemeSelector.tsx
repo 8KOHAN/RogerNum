@@ -11,6 +11,7 @@ import {
   type Theme,
 } from '../../../app/providers/theme/themes';
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
+import { Button, Card } from '../../../shared/ui';
 
 import './ThemeSelector.css';
 
@@ -96,10 +97,11 @@ export function ThemeSelector() {
 
   return (
     <div className="theme-selector" ref={selectorRef}>
-      <button
+      <Button
         ref={triggerRef}
         className="theme-selector-trigger"
-        type="button"
+        variant="ghost"
+        size="icon"
         title={`Theme: ${THEMES[theme].label}`}
         aria-label={`Choose interface theme. Current theme: ${THEMES[theme].label}`}
         aria-haspopup="menu"
@@ -110,9 +112,9 @@ export function ThemeSelector() {
         <span className="theme-selector-icon" aria-hidden="true">
           ◐
         </span>
-      </button>
+      </Button>
 
-      <div
+      <Card
         className="theme-selector-menu"
         id="theme-selector-menu"
         role="menu"
@@ -128,9 +130,11 @@ export function ThemeSelector() {
             const isSelected = themeId === theme;
 
             return (
-              <button
+              <Button
                 key={themeId}
                 className={`theme-option${isSelected ? ' is-selected' : ''}`}
+                variant="ghost"
+                size="medium"
                 type="button"
                 role="menuitemradio"
                 aria-checked={isSelected}
@@ -156,11 +160,11 @@ export function ThemeSelector() {
                     ✓
                   </span>
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

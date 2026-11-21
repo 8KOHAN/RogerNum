@@ -45,11 +45,24 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   const [theme, setThemeState] = useState<Theme>(readStoredTheme);
 
   const setTheme = useCallback((nextTheme: Theme) => {
+    if (nextTheme === theme) {
+      return;
+    }
+
+    // Disable transitions for the single frame in which theme tokens change.
+    document.documentElement.dataset.themeChanging = 'true';
     setThemeState(nextTheme);
-  }, []);
+  }, [theme]);
 
   useLayoutEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+
+    const frameId = requestAnimationFrame(() => {
+      delete root.dataset.themeChanging;
+    });
+
+    return () => cancelAnimationFrame(frameId);
   }, [theme]);
 
   useEffect(() => {

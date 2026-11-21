@@ -34,7 +34,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    var(--color-header-accent),
+    var(--gradient-header-line-accent),
     transparent
   );
   opacity: 0.65;

@@ -1,0 +1,14 @@
+/* Shared form field layout */
+
+.ui-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ui-form-field__label {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}

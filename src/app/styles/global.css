@@ -1,4 +1,14 @@
 :root {
+  --theme-transition-duration: 0ms;
+  --interaction-transition-duration: 160ms;
+  --interaction-transition-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  transition-property: none;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: ease;
+}
+
+:root {
   font-family:
     Inter,
     'Segoe UI',
@@ -12,6 +22,16 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* Theme-controlled colors switch immediately. Interactive motion is opt-in
+   and is defined on the components that actually animate. */
+*,
+*::before,
+*::after {
+  transition-property: none;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: ease;
 }
 
 html,
@@ -49,4 +69,10 @@ button {
 ::selection {
   color: var(--color-text);
   background: var(--color-accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --interaction-transition-duration: 0ms;
+  }
 }

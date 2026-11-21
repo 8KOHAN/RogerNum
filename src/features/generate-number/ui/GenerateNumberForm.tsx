@@ -7,11 +7,11 @@ import {
 
 import { THEMES } from '../../../app/providers/theme/themes';
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
+import { Button, Card, FormField, NumberInput } from '../../../shared/ui';
 
 import './GenerateNumberForm.css';
 
 type FormErrorCode = GenerateNumberErrorCode | 'empty-bounds';
-type StepDirection = -1 | 1;
 
 const errorMessages: Record<FormErrorCode, string> = {
   'empty-bounds': 'Enter both minimum and maximum values.',
@@ -20,40 +20,6 @@ const errorMessages: Record<FormErrorCode, string> = {
     'The minimum value cannot exceed the maximum.',
   'range-too-large': 'The selected range is too large.',
 };
-
-function getSteppedValue(
-  value: string,
-  direction: StepDirection,
-): string | null {
-  const currentValue = value.trim() === '' ? 0 : Number(value);
-
-  if (!Number.isFinite(currentValue)) {
-    return null;
-  }
-
-  const nextValue =
-    direction === 1
-      ? Math.floor(currentValue) + 1
-      : Math.ceil(currentValue) - 1;
-
-  return Number.isSafeInteger(nextValue) ? String(nextValue) : null;
-}
-
-function StepArrow({ direction }: { direction: StepDirection }) {
-  const path =
-    direction === 1 ? 'm4 10 4-4 4 4' : 'm4 6 4 4 4-4';
-
-  return (
-    <svg
-      className="number-stepper-icon"
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d={path} />
-    </svg>
-  );
-}
 
 export function GenerateNumberForm() {
   const { theme } = useTheme();
@@ -100,147 +66,80 @@ export function GenerateNumberForm() {
     setError(null);
   };
 
-  const handleStep = (
-    bound: 'min' | 'max',
-    direction: StepDirection,
-  ) => {
-    const currentValue = bound === 'min' ? minValue : maxValue;
-    const nextValue = getSteppedValue(currentValue, direction);
-
-    if (nextValue === null) {
-      return;
-    }
-
-    if (bound === 'min') {
-      handleMinChange(nextValue);
-    } else {
-      handleMaxChange(nextValue);
-    }
-  };
-
   return (
-    <main className="generator-card">
-      <div className="section-heading">
-        <p className="section-eyebrow">RANDOM NUMBER GENERATOR</p>
+    <main>
+      <Card className="generator-card">
+        <div className="section-heading">
+          <p className="section-eyebrow">RANDOM NUMBER GENERATOR</p>
 
-        <h2>Number generator</h2>
+          <h2>Number generator</h2>
 
-        <p className="section-description">
-          Choose your range and discover your number.
-        </p>
-      </div>
-
-      <form onSubmit={handleGenerate} noValidate>
-        <div className="range-fields">
-          <div className="field-group">
-            <label htmlFor="minimum">From</label>
-
-            <div className="number-input">
-              <input
-                className="number-input-field"
-                id="minimum"
-                type="number"
-                step="1"
-                inputMode="numeric"
-                value={minValue}
-                onChange={(event) => handleMinChange(event.target.value)}
-                placeholder="Minimum"
-                required
-              />
-
-              <div className="number-stepper">
-                <button
-                  className="number-stepper-button"
-                  type="button"
-                  aria-label="Increase minimum value"
-                  onClick={() => handleStep('min', 1)}
-                  disabled={getSteppedValue(minValue, 1) === null}
-                >
-                  <StepArrow direction={1} />
-                </button>
-
-                <button
-                  className="number-stepper-button"
-                  type="button"
-                  aria-label="Decrease minimum value"
-                  onClick={() => handleStep('min', -1)}
-                  disabled={getSteppedValue(minValue, -1) === null}
-                >
-                  <StepArrow direction={-1} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="field-group">
-            <label htmlFor="maximum">To</label>
-
-            <div className="number-input">
-              <input
-                className="number-input-field"
-                id="maximum"
-                type="number"
-                step="1"
-                inputMode="numeric"
-                value={maxValue}
-                onChange={(event) => handleMaxChange(event.target.value)}
-                placeholder="Maximum"
-                required
-              />
-
-              <div className="number-stepper">
-                <button
-                  className="number-stepper-button"
-                  type="button"
-                  aria-label="Increase maximum value"
-                  onClick={() => handleStep('max', 1)}
-                  disabled={getSteppedValue(maxValue, 1) === null}
-                >
-                  <StepArrow direction={1} />
-                </button>
-
-                <button
-                  className="number-stepper-button"
-                  type="button"
-                  aria-label="Decrease maximum value"
-                  onClick={() => handleStep('max', -1)}
-                  disabled={getSteppedValue(maxValue, -1) === null}
-                >
-                  <StepArrow direction={-1} />
-                </button>
-              </div>
-            </div>
-          </div>
+          <p className="section-description">
+            Choose your range and discover your number.
+          </p>
         </div>
 
-        <section
-          className={`result-card${result !== null ? ' has-result' : ''}`}
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <p className="result-label">{themeCopy.resultLabel}</p>
+        <form onSubmit={handleGenerate} noValidate>
+          <div className="range-fields">
+            <FormField id="minimum" label="From">
+              <NumberInput
+                id="minimum"
+                value={minValue}
+                onValueChange={handleMinChange}
+                placeholder="Minimum"
+                required
+                increaseLabel="Increase minimum value"
+                decreaseLabel="Decrease minimum value"
+              />
+            </FormField>
 
-          <output className="result-value">
-            {result === null ? '— — —' : result.toLocaleString('en-US')}
-          </output>
+            <FormField id="maximum" label="To">
+              <NumberInput
+                id="maximum"
+                value={maxValue}
+                onValueChange={handleMaxChange}
+                placeholder="Maximum"
+                required
+                increaseLabel="Increase maximum value"
+                decreaseLabel="Decrease maximum value"
+              />
+            </FormField>
+          </div>
 
-          <p className="result-caption">
-            {result === null
-              ? 'Your result will appear here'
-              : `From ${minValue} to ${maxValue}`}
-          </p>
-        </section>
+          <section
+            className={`result-card${result !== null ? ' has-result' : ''}`}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <p className="result-label">{themeCopy.resultLabel}</p>
 
-        {error && (
-          <p className="error-message" role="alert">
-            {errorMessages[error]}
-          </p>
-        )}
+            <output className="result-value">
+              {result === null ? '— — —' : result.toLocaleString('en-US')}
+            </output>
 
-        <button className="generate-button" type="submit">
-          Generate number
-        </button>
-      </form>
+            <p className="result-caption">
+              {result === null
+                ? 'Your result will appear here'
+                : `From ${minValue} to ${maxValue}`}
+            </p>
+          </section>
+
+          {error && (
+            <p className="error-message" role="alert">
+              {errorMessages[error]}
+            </p>
+          )}
+
+          <Button
+            className="generate-button"
+            type="submit"
+            variant="primary"
+            size="large"
+          >
+            Generate number
+          </Button>
+        </form>
+      </Card>
     </main>
   );
 }

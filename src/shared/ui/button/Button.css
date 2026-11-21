@@ -1,0 +1,114 @@
+/* Shared button base */
+
+.ui-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  user-select: none;
+
+  transition:
+    transform var(--interaction-transition-duration) var(--interaction-transition-easing),
+    filter var(--interaction-transition-duration) var(--interaction-transition-easing),
+    opacity var(--interaction-transition-duration) var(--interaction-transition-easing),
+    color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    background-color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    border-color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    box-shadow var(--interaction-transition-duration) var(--interaction-transition-easing);
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 2px;
+}
+
+.ui-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ui-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.ui-button--primary {
+  color: var(--color-accent-contrast);
+  background: var(--gradient-button);
+  border-color: var(--color-accent-strong);
+  box-shadow: var(--shadow-button);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ui-button--primary:hover:not(:disabled) {
+  filter: brightness(1.04);
+  box-shadow: var(--shadow-button-hover);
+}
+
+.ui-button--primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-button);
+}
+
+.ui-button--secondary {
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  font-size: 12px;
+}
+
+.ui-button--secondary:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-elevated);
+}
+
+.ui-button--ghost {
+  color: var(--color-text-muted);
+  background: transparent;
+  border-color: transparent;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.ui-button--ghost:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+}
+
+.ui-button--small {
+  min-height: 30px;
+  padding: 6px 9px;
+  font-size: 11px;
+}
+
+.ui-button--medium {
+  min-height: 36px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.ui-button--large {
+  min-height: 45px;
+  padding: 12px 16px;
+}
+
+.ui-button--icon {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  line-height: 1;
+}
