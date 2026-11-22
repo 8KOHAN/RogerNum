@@ -1,10 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { LanguageProvider } from '../../app/providers/i18n';
 import { ThemeProvider } from '../../app/providers/theme/ThemeProvider';
 import '../../app/styles/theme.css';
 import '../../app/styles/global.css';
-import { OptionsPage } from '../../pages/options/ui/OptionsPage';
+import { OptionsPage } from '../../pages/options';
 
 const rootElement = document.getElementById('root');
 
@@ -14,8 +15,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ThemeProvider>
-      <OptionsPage />
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <OptionsPage />
+      </ThemeProvider>
+    </LanguageProvider>
   </StrictMode>,
 );

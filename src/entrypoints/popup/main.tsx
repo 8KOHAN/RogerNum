@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { LanguageProvider } from '../../app/providers/i18n';
 import { ThemeProvider } from '../../app/providers/theme/ThemeProvider';
 import '../../app/styles/theme.css';
 import '../../app/styles/global.css';
@@ -14,8 +15,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ThemeProvider>
-      <PopupPage />
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <PopupPage />
+      </ThemeProvider>
+    </LanguageProvider>
   </StrictMode>,
 );

@@ -11,12 +11,14 @@ import {
   type Theme,
 } from '../../../app/providers/theme/themes';
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
+import { useI18n } from '../../../app/providers/i18n';
 import { Button, Card } from '../../../shared/ui';
 
 import './ThemeSelector.css';
 
 export function ThemeSelector() {
   const { theme, setTheme } = useTheme();
+  const { t, themeText } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -102,8 +104,8 @@ export function ThemeSelector() {
         className="theme-selector-trigger"
         variant="ghost"
         size="icon"
-        title={`Theme: ${THEMES[theme].label}`}
-        aria-label={`Choose interface theme. Current theme: ${THEMES[theme].label}`}
+        title={t('theme.currentTheme', { theme: themeText[theme].label })}
+        aria-label={t('theme.chooseThemeCurrent', { theme: themeText[theme].label })}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls="theme-selector-menu"
@@ -118,15 +120,15 @@ export function ThemeSelector() {
         className="theme-selector-menu"
         id="theme-selector-menu"
         role="menu"
-        aria-label="Choose interface theme"
+        aria-label={t('theme.chooseInterfaceTheme')}
         hidden={!isOpen}
         onKeyDown={handleMenuKeyDown}
       >
-        <p className="theme-selector-heading">Appearance</p>
+        <p className="theme-selector-heading">{t('theme.appearance')}</p>
 
         <div className="theme-selector-options">
           {THEME_IDS.map((themeId) => {
-            const option = THEMES[themeId];
+            const option = themeText[themeId];
             const isSelected = themeId === theme;
 
             return (
@@ -142,7 +144,7 @@ export function ThemeSelector() {
               >
                 <span
                   className="theme-option-swatch"
-                  style={{ backgroundColor: option.swatch }}
+                  style={{ backgroundColor: THEMES[themeId].swatch }}
                   aria-hidden="true"
                 />
 

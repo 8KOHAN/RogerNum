@@ -1,44 +1,9 @@
 export const THEMES = {
-  light: {
-    label: 'Light',
-    description: 'Clean and minimal',
-    swatch: '#6B7280',
-    brandSubtitle: 'NUMBER GENERATOR',
-    resultLabel: 'GENERATED NUMBER',
-    editionLabel: 'MINIMAL EDITION',
-  },
-  dark: {
-    label: 'Dark',
-    description: 'Quiet graphite',
-    swatch: '#9CA3AF',
-    brandSubtitle: 'NUMBER GENERATOR',
-    resultLabel: 'YOUR RESULT',
-    editionLabel: 'DARK EDITION',
-  },
-  gold: {
-    label: 'Gold',
-    description: 'Warm and premium',
-    swatch: '#D7A84A',
-    brandSubtitle: 'THE GOLDEN GENERATOR',
-    resultLabel: 'YOUR GOLDEN NUMBER',
-    editionLabel: 'GOLD EDITION',
-  },
-  ocean: {
-    label: 'Ocean',
-    description: 'Cool teal tones',
-    swatch: '#4DC7D5',
-    brandSubtitle: 'OCEAN NUMBER LAB',
-    resultLabel: 'NUMBER DISCOVERED',
-    editionLabel: 'OCEAN EDITION',
-  },
-  forest: {
-    label: 'Forest',
-    description: 'Natural green tones',
-    swatch: '#7CCB8E',
-    brandSubtitle: 'NATURAL RANDOMNESS',
-    resultLabel: 'YOUR RANDOM NUMBER',
-    editionLabel: 'FOREST EDITION',
-  },
+  light: { swatch: '#6B7280' },
+  dark: { swatch: '#9CA3AF' },
+  gold: { swatch: '#D7A84A' },
+  ocean: { swatch: '#4DC7D5' },
+  forest: { swatch: '#7CCB8E' },
 } as const;
 
 export type Theme = keyof typeof THEMES;

@@ -5,25 +5,25 @@ import {
   type GenerateNumberErrorCode,
 } from '../model/generateNumber';
 
-import { THEMES } from '../../../app/providers/theme/themes';
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
+import { useI18n, type TranslationKey } from '../../../app/providers/i18n';
 import { Button, Card, FormField, NumberInput } from '../../../shared/ui';
 
 import './GenerateNumberForm.css';
 
 type FormErrorCode = GenerateNumberErrorCode | 'empty-bounds';
 
-const errorMessages: Record<FormErrorCode, string> = {
-  'empty-bounds': 'Enter both minimum and maximum values.',
-  'invalid-integer': 'Enter valid integers within the safe number range.',
-  'minimum-exceeds-maximum':
-    'The minimum value cannot exceed the maximum.',
-  'range-too-large': 'The selected range is too large.',
+const errorTranslationKeys: Record<FormErrorCode, TranslationKey> = {
+  'empty-bounds': 'generator.error.emptyBounds',
+  'invalid-integer': 'generator.error.invalidInteger',
+  'minimum-exceeds-maximum': 'generator.error.minimumExceedsMaximum',
+  'range-too-large': 'generator.error.rangeTooLarge',
 };
 
 export function GenerateNumberForm() {
   const { theme } = useTheme();
-  const themeCopy = THEMES[theme];
+  const { language, t, themeText } = useI18n();
+  const themeCopy = themeText[theme];
 
   const [minValue, setMinValue] = useState('1');
   const [maxValue, setMaxValue] = useState('100');
@@ -41,12 +41,9 @@ export function GenerateNumberForm() {
       return;
     }
 
-    const generation = generateNumber(
-      Number(minValue),
-      Number(maxValue),
-    );
+    const generation = generateNumber(Number(minValue), Number(maxValue));
 
-    if (!generation.ok) {
+    if (generation.ok === false) {
       setError(generation.error);
       return;
     }
@@ -66,42 +63,40 @@ export function GenerateNumberForm() {
     setError(null);
   };
 
+  const numberLocale = language === 'uk' ? 'uk-UA' : 'en-US';
+
   return (
     <main>
       <Card className="generator-card">
         <div className="section-heading">
-          <p className="section-eyebrow">RANDOM NUMBER GENERATOR</p>
-
-          <h2>Number generator</h2>
-
-          <p className="section-description">
-            Choose your range and discover your number.
-          </p>
+          <p className="section-eyebrow">{t('generator.eyebrow')}</p>
+          <h2>{t('generator.title')}</h2>
+          <p className="section-description">{t('generator.description')}</p>
         </div>
 
         <form onSubmit={handleGenerate} noValidate>
           <div className="range-fields">
-            <FormField id="minimum" label="From">
+            <FormField id="minimum" label={t('generator.from')}>
               <NumberInput
                 id="minimum"
                 value={minValue}
                 onValueChange={handleMinChange}
-                placeholder="Minimum"
+                placeholder={t('generator.minimum')}
                 required
-                increaseLabel="Increase minimum value"
-                decreaseLabel="Decrease minimum value"
+                increaseLabel={t('generator.increaseMinimum')}
+                decreaseLabel={t('generator.decreaseMinimum')}
               />
             </FormField>
 
-            <FormField id="maximum" label="To">
+            <FormField id="maximum" label={t('generator.to')}>
               <NumberInput
                 id="maximum"
                 value={maxValue}
                 onValueChange={handleMaxChange}
-                placeholder="Maximum"
+                placeholder={t('generator.maximum')}
                 required
-                increaseLabel="Increase maximum value"
-                decreaseLabel="Decrease maximum value"
+                increaseLabel={t('generator.increaseMaximum')}
+                decreaseLabel={t('generator.decreaseMaximum')}
               />
             </FormField>
           </div>
@@ -112,21 +107,19 @@ export function GenerateNumberForm() {
             aria-atomic="true"
           >
             <p className="result-label">{themeCopy.resultLabel}</p>
-
             <output className="result-value">
-              {result === null ? '— — —' : result.toLocaleString('en-US')}
+              {result === null ? '— — —' : result.toLocaleString(numberLocale)}
             </output>
-
             <p className="result-caption">
               {result === null
-                ? 'Your result will appear here'
-                : `From ${minValue} to ${maxValue}`}
+                ? t('generator.resultWillAppear')
+                : t('generator.resultRange', { from: minValue, to: maxValue })}
             </p>
           </section>
 
           {error && (
             <p className="error-message" role="alert">
-              {errorMessages[error]}
+              {t(errorTranslationKeys[error])}
             </p>
           )}
 
@@ -136,7 +129,7 @@ export function GenerateNumberForm() {
             variant="primary"
             size="large"
           >
-            Generate number
+            {t('generator.generate')}
           </Button>
         </form>
       </Card>

@@ -4,13 +4,15 @@ import {
   type Theme,
 } from '../../../app/providers/theme/themes';
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
+import { useI18n } from '../../../app/providers/i18n';
 import { Button, Card } from '../../../shared/ui';
 
 import './ThemeSettings.css';
 
 export function ThemeSettings() {
   const { theme, setTheme } = useTheme();
-  const activeTheme = THEMES[theme];
+  const { t, themeText } = useI18n();
+  const activeTheme = themeText[theme];
 
   function handleThemeSelect(nextTheme: Theme) {
     setTheme(nextTheme);
@@ -20,15 +22,13 @@ export function ThemeSettings() {
     <Card className="theme-settings-card">
       <div className="theme-settings-header">
         <div className="theme-settings-heading">
-          <p className="theme-settings-eyebrow">PERSONALIZATION</p>
-          <h2 id="theme-settings-title">Appearance</h2>
-          <p className="theme-settings-description">
-            Choose the color theme used across RogerNum.
-          </p>
+          <p className="theme-settings-eyebrow">{t('settings.personalization')}</p>
+          <h2 id="theme-settings-title">{t('theme.appearance')}</h2>
+          <p className="theme-settings-description">{t('settings.themeDescription')}</p>
         </div>
 
         <span className="theme-settings-current">
-          {activeTheme.label} selected
+          {t('settings.selectedTheme', { theme: activeTheme.label })}
         </span>
       </div>
 
@@ -38,7 +38,7 @@ export function ThemeSettings() {
         aria-labelledby="theme-settings-title"
       >
         {THEME_IDS.map((themeId) => {
-          const option = THEMES[themeId];
+          const option = themeText[themeId];
           const isSelected = themeId === theme;
 
           return (
@@ -52,23 +52,16 @@ export function ThemeSettings() {
             >
               <span
                 className="theme-settings-option-swatch"
-                style={{ backgroundColor: option.swatch }}
+                style={{ backgroundColor: THEMES[themeId].swatch }}
                 aria-hidden="true"
               />
 
               <span className="theme-settings-option-copy">
-                <span className="theme-settings-option-label">
-                  {option.label}
-                </span>
-                <span className="theme-settings-option-description">
-                  {option.description}
-                </span>
+                <span className="theme-settings-option-label">{option.label}</span>
+                <span className="theme-settings-option-description">{option.description}</span>
               </span>
 
-              <span
-                className="theme-settings-option-check"
-                aria-hidden="true"
-              >
+              <span className="theme-settings-option-check" aria-hidden="true">
                 {isSelected ? '✓' : ''}
               </span>
             </Button>
@@ -77,7 +70,7 @@ export function ThemeSettings() {
       </div>
 
       <p className="theme-settings-note" role="status" aria-live="polite">
-        Your appearance preference is saved automatically.
+        {t('settings.themeSavedAutomatically')}
       </p>
     </Card>
   );
