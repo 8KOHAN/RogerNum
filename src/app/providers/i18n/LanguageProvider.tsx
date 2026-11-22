@@ -4,10 +4,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
 
+import {
+  getInitialUserSettings,
+  getUserSettings,
+  subscribeToUserSettings,
+  updateUserSettings,
+} from '../settings';
 import {
   LANGUAGE_LABELS,
   LOCALES,
@@ -19,9 +26,8 @@ import {
 import type { Theme } from '../theme/themes';
 
 export { LANGUAGE_LABELS, SUPPORTED_LANGUAGES };
+export { LANGUAGE_STORAGE_KEY } from '../settings';
 export type { Language, TranslationKey };
-
-export const LANGUAGE_STORAGE_KEY = 'roger-num:language';
 
 type TranslationValues = Record<string, string | number>;
 type LanguageContextValue = {
@@ -32,41 +38,6 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
-
-function isLanguage(value: unknown): value is Language {
-  return (
-    typeof value === 'string' &&
-    SUPPORTED_LANGUAGES.includes(value as Language)
-  );
-}
-
-function getBrowserLanguage(): Language {
-  const browserLanguage =
-    typeof navigator === 'undefined' ? '' : navigator.language.toLowerCase();
-
-  return browserLanguage.startsWith('uk') ? 'uk' : 'en';
-}
-
-function readInitialLanguage(): Language {
-  try {
-    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (isLanguage(storedLanguage)) {
-      return storedLanguage;
-    }
-  } catch {
-    // Fall back to the browser language when persistent storage is unavailable.
-  }
-
-  return getBrowserLanguage();
-}
-
-function persistLanguage(language: Language): void {
-  try {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  } catch {
-    // Language selection remains available for the current session.
-  }
-}
 
 function interpolateMessage(
   message: string,
@@ -79,35 +50,67 @@ function interpolateMessage(
 }
 
 export function LanguageProvider({ children }: PropsWithChildren) {
-  const [language, setLanguageState] = useState<Language>(readInitialLanguage);
+  const [language, setLanguageState] = useState<Language>(
+    () => getInitialUserSettings().language,
+  );
+  const userChangedLanguage = useRef(false);
+  const receivedStoredLanguage = useRef(false);
 
-  const setLanguage = useCallback((nextLanguage: Language) => {
-    setLanguageState(nextLanguage);
+  useEffect(() => {
+    let isActive = true;
+
+    const unsubscribe = subscribeToUserSettings((patch) => {
+      if (patch.language !== undefined) {
+        receivedStoredLanguage.current = true;
+        setLanguageState(patch.language);
+      }
+    });
+
+    void getUserSettings()
+      .then((settings) => {
+        if (
+          isActive &&
+          !userChangedLanguage.current &&
+          !receivedStoredLanguage.current
+        ) {
+          setLanguageState(settings.language);
+        }
+      })
+      .catch(() => {
+        // Keep the synchronous bootstrap value if persistent storage is unavailable.
+      });
+
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
   }, []);
+
+  const setLanguage = useCallback(
+    (nextLanguage: Language) => {
+      if (nextLanguage === language) {
+        return;
+      }
+
+      userChangedLanguage.current = true;
+      setLanguageState(nextLanguage);
+
+      void updateUserSettings({ language: nextLanguage }).catch(() => {
+        // The selected language remains available for the current session.
+      });
+    },
+    [language],
+  );
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const t = useCallback(
     (key: TranslationKey, values?: TranslationValues) =>
       interpolateMessage(LOCALES[language].messages[key], values),
     [language],
   );
-
-  useEffect(() => {
-    document.documentElement.lang = language;
-    persistLanguage(language);
-  }, [language]);
-
-  useEffect(() => {
-    function handleStorage(event: StorageEvent) {
-      if (event.key === LANGUAGE_STORAGE_KEY) {
-        setLanguageState(
-          isLanguage(event.newValue) ? event.newValue : getBrowserLanguage(),
-        );
-      }
-    }
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   const value = useMemo<LanguageContextValue>(
     () => ({

@@ -5,16 +5,18 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
 
 import {
-  DEFAULT_THEME,
-  isTheme,
-  THEME_STORAGE_KEY,
-  type Theme,
-} from './themes';
+  getInitialUserSettings,
+  getUserSettings,
+  subscribeToUserSettings,
+  updateUserSettings,
+} from '../settings';
+import type { Theme } from './themes';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -23,36 +25,59 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function readStoredTheme(): Theme {
-  try {
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-
-    return isTheme(storedTheme) ? storedTheme : DEFAULT_THEME;
-  } catch {
-    return DEFAULT_THEME;
-  }
-}
-
-function saveTheme(theme: Theme): void {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // Theme selection remains available for the current session.
-  }
-}
-
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const [theme, setThemeState] = useState<Theme>(readStoredTheme);
+  const [theme, setThemeState] = useState<Theme>(
+    () => getInitialUserSettings().theme,
+  );
+  const userChangedTheme = useRef(false);
+  const receivedStoredTheme = useRef(false);
 
-  const setTheme = useCallback((nextTheme: Theme) => {
-    if (nextTheme === theme) {
-      return;
-    }
+  useEffect(() => {
+    let isActive = true;
 
-    // Disable transitions for the single frame in which theme tokens change.
-    document.documentElement.dataset.themeChanging = 'true';
-    setThemeState(nextTheme);
-  }, [theme]);
+    const unsubscribe = subscribeToUserSettings((patch) => {
+      if (patch.theme !== undefined) {
+        receivedStoredTheme.current = true;
+        setThemeState(patch.theme);
+      }
+    });
+
+    void getUserSettings()
+      .then((settings) => {
+        if (
+          isActive &&
+          !userChangedTheme.current &&
+          !receivedStoredTheme.current
+        ) {
+          setThemeState(settings.theme);
+        }
+      })
+      .catch(() => {
+        // Keep the synchronous bootstrap value if persistent storage is unavailable.
+      });
+
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const setTheme = useCallback(
+    (nextTheme: Theme) => {
+      if (nextTheme === theme) {
+        return;
+      }
+
+      userChangedTheme.current = true;
+      document.documentElement.dataset.themeChanging = 'true';
+      setThemeState(nextTheme);
+
+      void updateUserSettings({ theme: nextTheme }).catch(() => {
+        // The selected theme remains available for the current session.
+      });
+    },
+    [theme],
+  );
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -65,15 +90,8 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     return () => cancelAnimationFrame(frameId);
   }, [theme]);
 
-  useEffect(() => {
-    saveTheme(theme);
-  }, [theme]);
-
   const contextValue = useMemo(
-    () => ({
-      theme,
-      setTheme,
-    }),
+    () => ({ theme, setTheme }),
     [theme, setTheme],
   );
 
@@ -93,3 +111,4 @@ export function useTheme(): ThemeContextValue {
 
   return context;
 }
+

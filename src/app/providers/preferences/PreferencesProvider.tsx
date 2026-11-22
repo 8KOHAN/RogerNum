@@ -4,11 +4,20 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
 
-export const PREFERENCES_STORAGE_KEY = 'roger-num:preferences';
+import {
+  getInitialUserSettings,
+  getUserSettings,
+  PREFERENCES_STORAGE_KEY,
+  subscribeToUserSettings,
+  updateUserSettings,
+} from '../settings';
+
+export { PREFERENCES_STORAGE_KEY };
 
 export interface UserPreferences {
   multipleNumbersEnabled: boolean;
@@ -18,84 +27,56 @@ interface PreferencesContextValue extends UserPreferences {
   setMultipleNumbersEnabled: (enabled: boolean) => void;
 }
 
-const DEFAULT_PREFERENCES: UserPreferences = {
-  multipleNumbersEnabled: false,
-};
-
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
-function parsePreferences(serializedPreferences: string | null): UserPreferences {
-  if (serializedPreferences === null) {
-    return DEFAULT_PREFERENCES;
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(serializedPreferences);
-
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'multipleNumbersEnabled' in parsed &&
-      typeof parsed.multipleNumbersEnabled === 'boolean'
-    ) {
-      return { multipleNumbersEnabled: parsed.multipleNumbersEnabled };
-    }
-  } catch {
-    // Invalid stored data falls back to the default preferences.
-  }
-
-  return DEFAULT_PREFERENCES;
-}
-
-function readInitialPreferences(): UserPreferences {
-  try {
-    return parsePreferences(localStorage.getItem(PREFERENCES_STORAGE_KEY));
-  } catch {
-    // Preferences remain usable for the current session without storage access.
-    return DEFAULT_PREFERENCES;
-  }
-}
-
 export function PreferencesProvider({ children }: PropsWithChildren) {
-  const [preferences, setPreferences] = useState<UserPreferences>(
-    readInitialPreferences,
-  );
+  const [multipleNumbersEnabled, setMultipleNumbersEnabledState] =
+    useState<boolean>(() => getInitialUserSettings().multipleNumbersEnabled);
+  const userChangedPreference = useRef(false);
+  const receivedStoredPreference = useRef(false);
 
-  const setMultipleNumbersEnabled = useCallback((enabled: boolean) => {
-    setPreferences((currentPreferences) => ({
-      ...currentPreferences,
-      multipleNumbersEnabled: enabled,
-    }));
+  useEffect(() => {
+    let isActive = true;
+
+    const unsubscribe = subscribeToUserSettings((patch) => {
+      if (patch.multipleNumbersEnabled !== undefined) {
+        receivedStoredPreference.current = true;
+        setMultipleNumbersEnabledState(patch.multipleNumbersEnabled);
+      }
+    });
+
+    void getUserSettings()
+      .then((settings) => {
+        if (
+          isActive &&
+          !userChangedPreference.current &&
+          !receivedStoredPreference.current
+        ) {
+          setMultipleNumbersEnabledState(settings.multipleNumbersEnabled);
+        }
+      })
+      .catch(() => {
+        // Keep the synchronous bootstrap value if persistent storage is unavailable.
+      });
+
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        PREFERENCES_STORAGE_KEY,
-        JSON.stringify(preferences),
-      );
-    } catch {
-      // The current preference still works if persistent storage is unavailable.
-    }
-  }, [preferences]);
+  const setMultipleNumbersEnabled = useCallback((enabled: boolean) => {
+    userChangedPreference.current = true;
+    setMultipleNumbersEnabledState(enabled);
 
-  useEffect(() => {
-    function handleStorage(event: StorageEvent) {
-      if (event.key === PREFERENCES_STORAGE_KEY) {
-        setPreferences(parsePreferences(event.newValue));
-      }
-    }
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    void updateUserSettings({ multipleNumbersEnabled: enabled }).catch(() => {
+      // The preference remains available for the current session.
+    });
   }, []);
 
   const value = useMemo<PreferencesContextValue>(
-    () => ({
-      ...preferences,
-      setMultipleNumbersEnabled,
-    }),
-    [preferences, setMultipleNumbersEnabled],
+    () => ({ multipleNumbersEnabled, setMultipleNumbersEnabled }),
+    [multipleNumbersEnabled, setMultipleNumbersEnabled],
   );
 
   return (
