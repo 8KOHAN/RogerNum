@@ -9,6 +9,7 @@ export const en = {
     'menu.ariaLabel': 'RogerNum options',
     'menu.appearance': 'Appearance',
     'menu.settings': 'Settings',
+    'menu.githubRepository': 'GitHub repository',
     'theme.appearance': 'Appearance',
     'theme.chooseInterfaceTheme': 'Choose interface theme',
     'theme.currentTheme': 'Theme: {theme}',

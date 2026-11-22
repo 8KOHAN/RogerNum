@@ -259,6 +259,32 @@ body {
   background: var(--color-surface-muted);
 }
 
+.popup-overflow-menu-content .popup-menu-link {
+  text-decoration: none;
+}
+
+.popup-menu-item-icon--brand svg {
+  fill: currentColor;
+  stroke: none;
+}
+
+.popup-menu-item-trailing-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  color: var(--color-text-muted);
+}
+
+.popup-menu-item-trailing-icon svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .popup-overflow-menu-content .popup-menu-action .popup-menu-item-icon {
   flex-basis: 18px;
 }

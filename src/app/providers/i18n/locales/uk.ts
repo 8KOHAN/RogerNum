@@ -9,6 +9,7 @@ export const uk: LocaleDictionary = {
     'menu.ariaLabel': 'Параметри RogerNum',
     'menu.appearance': 'Оформлення',
     'menu.settings': 'Налаштування',
+    'menu.githubRepository': 'Репозиторій GitHub',
     'theme.appearance': 'Оформлення',
     'theme.chooseInterfaceTheme': 'Вибрати тему інтерфейсу',
     'theme.currentTheme': 'Тема: {theme}',
