@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import { LanguageProvider } from '../../app/providers/i18n';
 import { ThemeProvider } from '../../app/providers/theme/ThemeProvider';
+import { PreferencesProvider } from '../../app/providers/preferences';
 import '../../app/styles/theme.css';
 import '../../app/styles/global.css';
 import { OptionsPage } from '../../pages/options';
@@ -17,7 +18,9 @@ createRoot(rootElement).render(
   <StrictMode>
     <LanguageProvider>
       <ThemeProvider>
-        <OptionsPage />
+        <PreferencesProvider>
+          <OptionsPage />
+        </PreferencesProvider>
       </ThemeProvider>
     </LanguageProvider>
   </StrictMode>,

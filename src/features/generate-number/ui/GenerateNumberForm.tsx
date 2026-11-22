@@ -1,79 +1,144 @@
-import { useState, type SubmitEvent } from 'react';
+import { useEffect, useState, type SubmitEvent } from 'react';
 
 import {
   generateNumber,
+  generateNumbers,
+  MAX_GENERATED_NUMBERS,
   type GenerateNumberErrorCode,
+  type GenerateNumbersErrorCode,
 } from '../model/generateNumber';
 
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
 import { useI18n, type TranslationKey } from '../../../app/providers/i18n';
+import { usePreferences } from '../../../app/providers/preferences';
 import { Button, Card, FormField, NumberInput } from '../../../shared/ui';
 
 import './GenerateNumberForm.css';
 
-type FormErrorCode = GenerateNumberErrorCode | 'empty-bounds';
+type FormErrorCode =
+  | GenerateNumberErrorCode
+  | GenerateNumbersErrorCode
+  | 'empty-bounds';
+
+type CopyStatus = 'idle' | 'copied' | 'error';
 
 const errorTranslationKeys: Record<FormErrorCode, TranslationKey> = {
   'empty-bounds': 'generator.error.emptyBounds',
   'invalid-integer': 'generator.error.invalidInteger',
   'minimum-exceeds-maximum': 'generator.error.minimumExceedsMaximum',
   'range-too-large': 'generator.error.rangeTooLarge',
+  'invalid-count': 'generator.error.invalidCount',
 };
 
 export function GenerateNumberForm() {
   const { theme } = useTheme();
   const { language, t, themeText } = useI18n();
+  const { multipleNumbersEnabled } = usePreferences();
   const themeCopy = themeText[theme];
 
   const [minValue, setMinValue] = useState('1');
   const [maxValue, setMaxValue] = useState('100');
-  const [result, setResult] = useState<number | null>(null);
+  const [countValue, setCountValue] = useState('5');
+  const [results, setResults] = useState<number[] | null>(null);
   const [error, setError] = useState<FormErrorCode | null>(null);
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
+
+  useEffect(() => {
+    if (!multipleNumbersEnabled && results !== null && results.length > 1) {
+      setResults(null);
+      setCopyStatus('idle');
+    }
+  }, [multipleNumbersEnabled, results]);
 
   const handleGenerate = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    setResult(null);
+    setResults(null);
     setError(null);
+    setCopyStatus('idle');
 
     if (minValue.trim() === '' || maxValue.trim() === '') {
       setError('empty-bounds');
       return;
     }
 
-    const generation = generateNumber(Number(minValue), Number(maxValue));
+    const minimum = Number(minValue);
+    const maximum = Number(maxValue);
+
+    if (multipleNumbersEnabled) {
+      const generation = generateNumbers(minimum, maximum, Number(countValue));
+
+      if (generation.ok === false) {
+        setError(generation.error);
+        return;
+      }
+
+      setResults(generation.values);
+      return;
+    }
+
+    const generation = generateNumber(minimum, maximum);
 
     if (generation.ok === false) {
       setError(generation.error);
       return;
     }
 
-    setResult(generation.value);
+    setResults([generation.value]);
   };
 
   const handleMinChange = (value: string) => {
     setMinValue(value);
-    setResult(null);
+    setResults(null);
     setError(null);
+    setCopyStatus('idle');
   };
 
   const handleMaxChange = (value: string) => {
     setMaxValue(value);
-    setResult(null);
+    setResults(null);
     setError(null);
+    setCopyStatus('idle');
   };
 
+  const handleCountChange = (value: string) => {
+    setCountValue(value);
+    setResults(null);
+    setError(null);
+    setCopyStatus('idle');
+  };
+
+  async function handleCopyAll() {
+    if (results === null || results.length < 2) {
+      return;
+    }
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API is unavailable.');
+      }
+
+      await navigator.clipboard.writeText(results.join('\n'));
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('error');
+    }
+  }
+
   const numberLocale = language === 'uk' ? 'uk-UA' : 'en-US';
+  const hasResults = results !== null && results.length > 0;
+  const hasMultipleResults = results !== null && results.length > 1;
+  const resultRange = t('generator.resultRange', {
+    from: minValue,
+    to: maxValue,
+  });
 
   return (
     <main>
-      <Card className="generator-card">
-        <div className="section-heading">
-          <p className="section-eyebrow">{t('generator.eyebrow')}</p>
-          <h2>{t('generator.title')}</h2>
-          <p className="section-description">{t('generator.description')}</p>
-        </div>
-
+      <h2 className="visually-hidden">{t('generator.title')}</h2>
+      <Card
+        className={`generator-card${multipleNumbersEnabled ? ' generator-card--multiple-enabled' : ''}`}
+      >
         <form onSubmit={handleGenerate} noValidate>
           <div className="range-fields">
             <FormField id="minimum" label={t('generator.from')}>
@@ -101,25 +166,93 @@ export function GenerateNumberForm() {
             </FormField>
           </div>
 
+          {multipleNumbersEnabled && (
+            <div className="generator-count-row">
+              <label className="generator-count-label" htmlFor="number-count">
+                {t('generator.count')}
+              </label>
+              <NumberInput
+                id="number-count"
+                wrapperClassName="generator-count-input"
+                value={countValue}
+                onValueChange={handleCountChange}
+                min={1}
+                max={MAX_GENERATED_NUMBERS}
+                step={1}
+                required
+                increaseLabel={t('generator.increaseCount')}
+                decreaseLabel={t('generator.decreaseCount')}
+              />
+            </div>
+          )}
+
           <section
-            className={`result-card${result !== null ? ' has-result' : ''}`}
+            className={`result-card${hasResults ? ' has-result' : ''}${hasMultipleResults ? ' result-card--multiple' : ''}`}
             aria-live="polite"
-            aria-atomic="true"
+            aria-atomic={!hasMultipleResults}
           >
-            <p className="result-label">{themeCopy.resultLabel}</p>
-            <output className="result-value">
-              {result === null ? '— — —' : result.toLocaleString(numberLocale)}
-            </output>
-            <p className="result-caption">
-              {result === null
-                ? t('generator.resultWillAppear')
-                : t('generator.resultRange', { from: minValue, to: maxValue })}
+            <p className="result-label">
+              {hasMultipleResults ? themeCopy.resultsLabel : themeCopy.resultLabel}
             </p>
+
+            {hasMultipleResults ? (
+              <div
+                className="result-list"
+                role="list"
+                aria-label={t('generator.resultsCount', { count: results.length })}
+              >
+                {results.map((value, index) => (
+                  <output
+                    key={`${index}-${value}`}
+                    className="result-list-item"
+                    role="listitem"
+                  >
+                    {value.toLocaleString(numberLocale)}
+                  </output>
+                ))}
+              </div>
+            ) : (
+              <output className="result-value">
+                {results?.[0]?.toLocaleString(numberLocale) ?? '— — —'}
+              </output>
+            )}
+
+            <p className="result-caption">
+              {!hasResults
+                ? t('generator.resultWillAppear')
+                : resultRange}
+            </p>
+
+            {hasMultipleResults && (
+              <div className="result-multiple-footer">
+                <span className="result-multiple-count">
+                  {t('generator.resultsCount', { count: results.length })}
+                </span>
+                <Button
+                  className="result-copy-button"
+                  variant="secondary"
+                  size="small"
+                  type="button"
+                  onClick={handleCopyAll}
+                >
+                  {copyStatus === 'copied'
+                    ? t('generator.copied')
+                    : copyStatus === 'error'
+                      ? t('generator.copyFailed')
+                      : t('generator.copyAll')}
+                </Button>
+              </div>
+            )}
           </section>
 
           {error && (
             <p className="error-message" role="alert">
-              {t(errorTranslationKeys[error])}
+              {t(
+                errorTranslationKeys[error],
+                error === 'invalid-count'
+                  ? { max: MAX_GENERATED_NUMBERS }
+                  : undefined,
+              )}
             </p>
           )}
 
@@ -129,7 +262,9 @@ export function GenerateNumberForm() {
             variant="primary"
             size="large"
           >
-            {t('generator.generate')}
+            {multipleNumbersEnabled && Number(countValue) > 1
+              ? t('generator.generateNumbers')
+              : t('generator.generate')}
           </Button>
         </form>
       </Card>

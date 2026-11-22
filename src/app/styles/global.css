@@ -1,5 +1,6 @@
 :root {
   --theme-transition-duration: 0ms;
+  --theme-transition-easing: ease;
   --interaction-transition-duration: 160ms;
   --interaction-transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
@@ -46,7 +47,7 @@ body {
 }
 
 body {
-  min-height: 100vh;
+  min-height: 0;
 }
 
 #root {

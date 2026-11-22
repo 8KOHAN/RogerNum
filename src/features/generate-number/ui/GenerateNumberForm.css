@@ -1,38 +1,22 @@
 /* Generator card layout */
 
 .generator-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 17px;
 }
 
-.section-heading {
-  margin-bottom: 19px;
-}
-
-.section-eyebrow {
-  margin: 0 0 7px;
-
-  color: var(--color-accent);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1.2px;
-}
-
-.section-heading h2 {
-  margin: 0;
-
-  color: var(--color-text);
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.5px;
-}
-
-.section-description {
-  margin: 6px 0 0;
-
-  color: var(--color-text-muted);
-  font-size: 12px;
-  line-height: 1.5;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Range field layout */
@@ -42,6 +26,50 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.generator-card--multiple-enabled .range-fields {
+  margin-bottom: 10px;
+}
+
+.generator-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+  margin: -4px 0 12px;
+}
+
+.generator-count-label {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ui-number-input.generator-count-input {
+  flex: 0 0 88px;
+  width: 88px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.generator-count-input .ui-number-input__field {
+  padding: 0 7px;
+  font-size: 13px;
+}
+
+.generator-count-input .ui-number-input__stepper {
+  flex-basis: 22px;
+  margin: 3px 3px 3px 0;
+  padding-left: 2px;
+}
+
+.generator-count-input .ui-number-input__stepper-icon {
+  width: 10px;
+  height: 10px;
 }
 
 /* Result display */
@@ -106,6 +134,13 @@
 /* Validation message */
 
 .error-message {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+
   margin: 12px 0 0;
   padding: 10px 11px;
 
@@ -124,4 +159,75 @@
 .generate-button {
   width: 100%;
   margin-top: 15px;
+}
+
+.generator-card--multiple-enabled .generate-button {
+  margin-top: 12px;
+}
+
+
+.result-card--multiple {
+  align-items: stretch;
+  padding: 15px 12px 12px;
+}
+
+.result-card--multiple .result-label {
+  margin-bottom: 10px;
+}
+
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  max-height: 125px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 1px 4px 1px 1px;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--color-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.result-list-item {
+  display: block;
+  width: 100%;
+  padding: 7px 9px;
+  overflow-wrap: anywhere;
+
+  color: var(--color-result-value);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-card--multiple .result-caption {
+  margin-top: 10px;
+}
+
+.result-multiple-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--color-border);
+}
+
+.result-multiple-count {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.result-copy-button {
+  flex: 0 0 auto;
 }

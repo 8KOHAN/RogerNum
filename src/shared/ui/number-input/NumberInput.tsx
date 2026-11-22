@@ -24,6 +24,8 @@ function getSteppedValue(
   value: string,
   direction: StepDirection,
   step: number,
+  minimum?: number,
+  maximum?: number,
 ): string | null {
   const currentValue = value.trim() === '' ? 0 : Number(value);
 
@@ -36,7 +38,19 @@ function getSteppedValue(
       ? (Math.floor(currentValue / step) + 1) * step
       : (Math.ceil(currentValue / step) - 1) * step;
 
-  return Number.isSafeInteger(nextValue) ? String(nextValue) : null;
+  if (!Number.isSafeInteger(nextValue)) {
+    return null;
+  }
+
+  if (minimum !== undefined && Number.isFinite(minimum) && nextValue < minimum) {
+    return null;
+  }
+
+  if (maximum !== undefined && Number.isFinite(maximum) && nextValue > maximum) {
+    return null;
+  }
+
+  return String(nextValue);
 }
 
 function StepArrow({ direction }: { direction: StepDirection }) {
@@ -74,11 +88,15 @@ export function NumberInput({
     .filter(Boolean)
     .join(' ');
 
-  const increaseValue = getSteppedValue(value, 1, safeStep);
-  const decreaseValue = getSteppedValue(value, -1, safeStep);
+  const minimum =
+    inputProps.min === undefined ? undefined : Number(inputProps.min);
+  const maximum =
+    inputProps.max === undefined ? undefined : Number(inputProps.max);
+  const increaseValue = getSteppedValue(value, 1, safeStep, minimum, maximum);
+  const decreaseValue = getSteppedValue(value, -1, safeStep, minimum, maximum);
 
   function handleStep(direction: StepDirection) {
-    const nextValue = getSteppedValue(value, direction, safeStep);
+    const nextValue = getSteppedValue(value, direction, safeStep, minimum, maximum);
 
     if (nextValue !== null) {
       onValueChange(nextValue);

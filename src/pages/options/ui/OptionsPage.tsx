@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 import { useI18n } from '../../../app/providers/i18n';
 import { LanguageSettings } from '../../../features/language';
+import { MultipleNumbersSettings } from '../../../features/generate-number';
 import { ThemeSettings } from '../../../features/theme';
 
 import './OptionsPage.css';
@@ -38,6 +39,7 @@ export function OptionsPage() {
         </div>
 
         <LanguageSettings />
+        <MultipleNumbersSettings />
         <ThemeSettings />
       </main>
 

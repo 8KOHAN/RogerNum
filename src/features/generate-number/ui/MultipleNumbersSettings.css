@@ -1,0 +1,112 @@
+.multiple-numbers-settings-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+}
+
+.multiple-numbers-settings-copy {
+  min-width: 0;
+}
+
+.multiple-numbers-settings-eyebrow {
+  margin: 0 0 7px;
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1px;
+}
+
+.multiple-numbers-settings-copy h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.multiple-numbers-settings-description {
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.multiple-numbers-toggle {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.multiple-numbers-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.multiple-numbers-toggle-track {
+  display: inline-flex;
+  flex: 0 0 42px;
+  align-items: center;
+  width: 42px;
+  height: 24px;
+  padding: 3px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  transition:
+    background-color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    border-color var(--interaction-transition-duration) var(--interaction-transition-easing);
+}
+
+.multiple-numbers-toggle-thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background: var(--color-text-subtle);
+  border-radius: 50%;
+  transform: translateX(0);
+  transition:
+    background-color var(--interaction-transition-duration) var(--interaction-transition-easing),
+    transform var(--interaction-transition-duration) var(--interaction-transition-easing);
+}
+
+.multiple-numbers-toggle input:checked + .multiple-numbers-toggle-track {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.multiple-numbers-toggle input:checked + .multiple-numbers-toggle-track .multiple-numbers-toggle-thumb {
+  background: var(--color-accent-strong);
+  transform: translateX(17px);
+}
+
+.multiple-numbers-toggle input:focus-visible + .multiple-numbers-toggle-track {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .multiple-numbers-settings-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+    padding: 17px;
+  }
+
+  .multiple-numbers-toggle {
+    justify-content: space-between;
+  }
+}
