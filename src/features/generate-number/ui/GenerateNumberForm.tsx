@@ -11,7 +11,12 @@ import {
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
 import { useI18n, type TranslationKey } from '../../../app/providers/i18n';
 import { usePreferences } from '../../../app/providers/preferences';
-import { getUserSettings, subscribeToUserSettings, updateUserSettings } from '../../../app/providers/settings';
+import {
+  getInitialUserSettings,
+  getUserSettings,
+  subscribeToUserSettings,
+  updateUserSettings,
+} from '../../../app/providers/settings';
 import { Button, Card, FormField, NumberInput } from '../../../shared/ui';
 
 import './GenerateNumberForm.css';
@@ -37,24 +42,39 @@ export function GenerateNumberForm() {
   const { multipleNumbersEnabled } = usePreferences();
   const themeCopy = themeText[theme];
 
-  const [minValue, setMinValue] = useState('1');
-  const [maxValue, setMaxValue] = useState('100');
+  const [minValue, setMinValue] = useState(
+    () => getInitialUserSettings().rangeMin,
+  );
+  const [maxValue, setMaxValue] = useState(
+    () => getInitialUserSettings().rangeMax,
+  );
   const [countValue, setCountValue] = useState('5');
   const [results, setResults] = useState<number[] | null>(null);
   const [error, setError] = useState<FormErrorCode | null>(null);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
-  const rangeWasEdited = useRef(false);
+  const rangeMinWasEdited = useRef(false);
+  const rangeMaxWasEdited = useRef(false);
 
   useEffect(() => {
     let isActive = true;
     const unsubscribe = subscribeToUserSettings((patch) => {
-      if (patch.rangeMin !== undefined && !rangeWasEdited.current) setMinValue(patch.rangeMin);
-      if (patch.rangeMax !== undefined && !rangeWasEdited.current) setMaxValue(patch.rangeMax);
+      if (patch.rangeMin !== undefined && !rangeMinWasEdited.current) {
+        setMinValue(patch.rangeMin);
+      }
+      if (patch.rangeMax !== undefined && !rangeMaxWasEdited.current) {
+        setMaxValue(patch.rangeMax);
+      }
     });
 
     void getUserSettings().then((settings) => {
-      if (isActive && !rangeWasEdited.current) {
+      if (!isActive) {
+        return;
+      }
+
+      if (!rangeMinWasEdited.current) {
         setMinValue(settings.rangeMin);
+      }
+      if (!rangeMaxWasEdited.current) {
         setMaxValue(settings.rangeMax);
       }
     }).catch(() => {
@@ -109,14 +129,22 @@ export function GenerateNumberForm() {
   };
 
   const handleMinChange = (value: string) => {
+    rangeMinWasEdited.current = true;
     setMinValue(value);
+    void updateUserSettings({ rangeMin: value }).catch(() => {
+      // Keep the edited value in the current form if persistent storage fails.
+    });
     setResults(null);
     setError(null);
     setCopyStatus('idle');
   };
 
   const handleMaxChange = (value: string) => {
+    rangeMaxWasEdited.current = true;
     setMaxValue(value);
+    void updateUserSettings({ rangeMax: value }).catch(() => {
+      // Keep the edited value in the current form if persistent storage fails.
+    });
     setResults(null);
     setError(null);
     setCopyStatus('idle');

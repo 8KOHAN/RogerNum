@@ -1,8 +1,8 @@
 {
-  "name": "RogerNum",
-  "version": "0.0.0",
+  "name": "rogernum",
+  "version": "1.0.0",
   "private": true,
-  "description": "manifest.json description",
+  "description": "Open-source random number generator browser extension with 12 languages and 12 themes.",
   "type": "module",
   "scripts": {
     "dev": "wxt -b firefox",
@@ -28,5 +28,22 @@
     "typescript": "^5.9.3",
     "web-ext": "^10.8.0",
     "wxt": "^0.21.3"
-  }
+  },
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/8KOHAN/RogerNum.git"
+  },
+  "homepage": "https://github.com/8KOHAN/RogerNum#readme",
+  "bugs": {
+    "url": "https://github.com/8KOHAN/RogerNum/issues"
+  },
+  "keywords": [
+    "browser-extension",
+    "random-number-generator",
+    "wxt",
+    "firefox",
+    "chrome",
+    "localization"
+  ]
 }
