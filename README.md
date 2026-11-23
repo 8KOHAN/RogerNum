@@ -13,6 +13,8 @@
 - Use the system light/dark appearance until a theme is selected manually.
 - Copy a generated number or the full list of generated numbers.
 
+<img width="432" height="516" alt="-2026-11-23-163200-rounded" src="https://github.com/user-attachments/assets/45fccaca-ad27-4e29-a0f3-b97238984675" />
+
 ## Development
 
 Requirements: Node.js and npm.
