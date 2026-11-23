@@ -9,6 +9,7 @@ import {
 import { SUPPORTED_LANGUAGES, type Language } from '../i18n/locales';
 
 export const LANGUAGE_STORAGE_KEY = 'roger-num:language';
+const LANGUAGE_MANUAL_STORAGE_KEY = 'roger-num:language-manual';
 export const PREFERENCES_STORAGE_KEY = 'roger-num:preferences';
 export const MULTIPLE_NUMBERS_ENABLED_STORAGE_KEY =
   'roger-num:multiple-numbers-enabled';
@@ -23,7 +24,10 @@ export const USER_SETTINGS_STORAGE_KEYS = {
   rangeMax: RANGE_MAX_STORAGE_KEY,
 } as const;
 
-const STORAGE_KEY_LIST = Object.values(USER_SETTINGS_STORAGE_KEYS);
+const STORAGE_KEY_LIST = [
+  ...Object.values(USER_SETTINGS_STORAGE_KEYS),
+  LANGUAGE_MANUAL_STORAGE_KEY,
+];
 
 type StorageRecord = Record<string, unknown>;
 
@@ -55,10 +59,55 @@ function getSystemTheme(): Theme {
 }
 
 function getBrowserLanguage(): Language {
-  const browserLanguage =
-    typeof navigator === 'undefined' ? '' : navigator.language.toLowerCase();
+  if (typeof navigator === 'undefined') {
+    return 'en';
+  }
 
-  return browserLanguage.startsWith('uk') ? 'uk' : 'en';
+  const browserLanguages = [
+    ...(navigator.languages ?? []),
+    navigator.language,
+  ];
+
+  for (const browserLanguage of browserLanguages) {
+    const normalizedLanguage = browserLanguage
+      .replaceAll('_', '-')
+      .toLowerCase();
+    const languageCode = normalizedLanguage.split('-')[0];
+
+    switch (languageCode) {
+      case 'en':
+        return 'en';
+      case 'uk':
+        return 'uk';
+      case 'es':
+        return 'es';
+      case 'de':
+        return 'de';
+      case 'fr':
+        return 'fr';
+      case 'pt':
+        return 'pt_BR';
+      case 'ja':
+        return 'ja';
+      case 'zh':
+        if (/(?:^|[-_])(tw|hk|mo|hant)(?:$|[-_])/.test(normalizedLanguage)) {
+          break;
+        }
+        return 'zh_CN';
+      case 'ko':
+        return 'ko';
+      case 'ru':
+        return 'ru';
+      case 'ar':
+        return 'ar';
+      case 'it':
+        return 'it';
+      default:
+        break;
+    }
+  }
+
+  return 'en';
 }
 
 function isLanguage(value: unknown): value is Language {
@@ -103,16 +152,21 @@ function readLegacyMultipleNumbersEnabled(): boolean | undefined {
 
 /**
  * Returns a synchronous bootstrap snapshot from the legacy localStorage keys.
- * Browser Storage remains the source of truth; the localStorage copy avoids a
- * visible default-theme/language flash before the asynchronous API responds.
+ * Browser Storage remains the source of truth. Only explicit language choices
+ * are mirrored locally; browser-detected defaults are never persisted.
  */
 export function getInitialUserSettings(): UserSettings {
   const storedTheme = readLocalStorageValue(THEME_STORAGE_KEY);
   const storedLanguage = readLocalStorageValue(LANGUAGE_STORAGE_KEY);
+  const hasManualLanguage =
+    readLocalStorageValue(LANGUAGE_MANUAL_STORAGE_KEY) === 'true';
 
   return {
     theme: isTheme(storedTheme) ? storedTheme : getSystemTheme(),
-    language: isLanguage(storedLanguage) ? storedLanguage : getBrowserLanguage(),
+    language:
+      hasManualLanguage && isLanguage(storedLanguage)
+        ? storedLanguage
+        : getBrowserLanguage(),
     multipleNumbersEnabled: readLegacyMultipleNumbersEnabled() ?? false,
     rangeMin: readLocalStorageValue(RANGE_MIN_STORAGE_KEY) ?? '1',
     rangeMax: readLocalStorageValue(RANGE_MAX_STORAGE_KEY) ?? '100',
@@ -146,7 +200,6 @@ function normalizeStoredSettings(record: StorageRecord): UserSettings {
 
 function writeLocalStorageSnapshot(settings: UserSettings): void {
   try {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, settings.language);
     localStorage.setItem(RANGE_MIN_STORAGE_KEY, settings.rangeMin);
     localStorage.setItem(RANGE_MAX_STORAGE_KEY, settings.rangeMax);
     localStorage.setItem(
@@ -181,7 +234,25 @@ function handleStorageChanges(
 
   if (USER_SETTINGS_STORAGE_KEYS.language in changes) {
     const value = changes[USER_SETTINGS_STORAGE_KEYS.language]?.newValue;
-    patch.language = isLanguage(value) ? value : getBrowserLanguage();
+    const manualFlagChanged = LANGUAGE_MANUAL_STORAGE_KEY in changes;
+    const isManualLanguage = manualFlagChanged
+      ? changes[LANGUAGE_MANUAL_STORAGE_KEY]?.newValue === true
+      : readLocalStorageValue(LANGUAGE_MANUAL_STORAGE_KEY) === 'true';
+
+    patch.language =
+      isManualLanguage && isLanguage(value) ? value : getBrowserLanguage();
+
+    try {
+      if (isManualLanguage && isLanguage(value)) {
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, value);
+        localStorage.setItem(LANGUAGE_MANUAL_STORAGE_KEY, 'true');
+      } else {
+        localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+        localStorage.removeItem(LANGUAGE_MANUAL_STORAGE_KEY);
+      }
+    } catch {
+      // Browser Storage remains the source of truth.
+    }
   }
 
   if (USER_SETTINGS_STORAGE_KEYS.rangeMin in changes) {
@@ -240,8 +311,39 @@ async function initializeBrowserStorage(): Promise<void> {
     }
   }
 
-  if (!isLanguage(stored[USER_SETTINGS_STORAGE_KEYS.language])) {
-    migration[USER_SETTINGS_STORAGE_KEYS.language] = legacySettings.language;
+  const storedLanguage = stored[USER_SETTINGS_STORAGE_KEYS.language];
+  const hasManualLanguage = stored[LANGUAGE_MANUAL_STORAGE_KEY] === true;
+
+  if (isLanguage(storedLanguage) && !hasManualLanguage) {
+    // Older versions also persisted the detected browser language. Treat a
+    // value that differs from the current browser preference as a legacy
+    // manual choice; a matching value is just the old automatic default.
+    if (storedLanguage !== getBrowserLanguage()) {
+      migration[LANGUAGE_MANUAL_STORAGE_KEY] = true;
+    } else {
+      await browser.storage.local.remove(LANGUAGE_STORAGE_KEY);
+      try {
+        localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+        localStorage.removeItem(LANGUAGE_MANUAL_STORAGE_KEY);
+      } catch {
+        // Browser Storage remains the source of truth.
+      }
+    }
+  } else if (!isLanguage(storedLanguage)) {
+    const legacyLanguage = readLocalStorageValue(LANGUAGE_STORAGE_KEY);
+    if (isLanguage(legacyLanguage)) {
+      if (legacyLanguage !== getBrowserLanguage()) {
+        migration[USER_SETTINGS_STORAGE_KEYS.language] = legacyLanguage;
+        migration[LANGUAGE_MANUAL_STORAGE_KEY] = true;
+      } else {
+        try {
+          localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+          localStorage.removeItem(LANGUAGE_MANUAL_STORAGE_KEY);
+        } catch {
+          // Browser Storage remains the source of truth.
+        }
+      }
+    }
   }
 
   if (typeof stored[USER_SETTINGS_STORAGE_KEYS.rangeMin] !== 'string') {
@@ -287,6 +389,20 @@ export async function getUserSettings(): Promise<UserSettings> {
     const settings = normalizeStoredSettings(stored);
     writeLocalStorageSnapshot(settings);
     try {
+      if (
+        stored[LANGUAGE_MANUAL_STORAGE_KEY] === true &&
+        isLanguage(stored[LANGUAGE_STORAGE_KEY])
+      ) {
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, stored[LANGUAGE_STORAGE_KEY] as Language);
+        localStorage.setItem(LANGUAGE_MANUAL_STORAGE_KEY, 'true');
+      } else {
+        localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+        localStorage.removeItem(LANGUAGE_MANUAL_STORAGE_KEY);
+      }
+    } catch {
+      // Browser Storage remains the source of truth.
+    }
+    try {
       if (isTheme(stored[THEME_STORAGE_KEY])) {
         localStorage.setItem(THEME_STORAGE_KEY, stored[THEME_STORAGE_KEY] as Theme);
       } else {
@@ -316,6 +432,7 @@ function createStoragePatch(patch: UserSettingsPatch): StorageRecord {
       throw new TypeError('Invalid language value.');
     }
     storagePatch[USER_SETTINGS_STORAGE_KEYS.language] = patch.language;
+    storagePatch[LANGUAGE_MANUAL_STORAGE_KEY] = true;
   }
 
   if (patch.rangeMin !== undefined) {
@@ -358,6 +475,14 @@ export function updateUserSettings(
       ...patch,
     };
     writeLocalStorageSnapshot(nextLocalSnapshot);
+    if (patch.language !== undefined) {
+      try {
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, patch.language);
+        localStorage.setItem(LANGUAGE_MANUAL_STORAGE_KEY, 'true');
+      } catch {
+        // Browser Storage remains the source of truth.
+      }
+    }
     if (patch.theme !== undefined) {
       try { localStorage.setItem(THEME_STORAGE_KEY, patch.theme); } catch { /* Ignore cache failures. */ }
     }

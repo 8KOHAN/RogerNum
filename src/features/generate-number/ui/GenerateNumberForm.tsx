@@ -129,8 +129,8 @@ export function GenerateNumberForm() {
     setCopyStatus('idle');
   };
 
-  async function handleCopyAll() {
-    if (results === null || results.length < 2) {
+  async function handleCopyResults() {
+    if (results === null || results.length === 0) {
       return;
     }
 
@@ -139,13 +139,18 @@ export function GenerateNumberForm() {
         throw new Error('Clipboard API is unavailable.');
       }
 
-      await navigator.clipboard.writeText(results.join('\n'));
+      const textToCopy = results.length === 1
+        ? String(results[0])
+        : results.join('\n');
+
+      await navigator.clipboard.writeText(textToCopy);
+      setCopyStatus('copied');
     } catch {
       setCopyStatus('error');
     }
   }
 
-  const numberLocale = language === 'uk' ? 'uk-UA' : 'en-US';
+  const numberLocale = language.replace('_', '-');
   const hasResults = results !== null && results.length > 0;
   const hasMultipleResults = results !== null && results.length > 1;
   const resultRange = t('generator.resultRange', {
@@ -253,13 +258,31 @@ export function GenerateNumberForm() {
                   variant="secondary"
                   size="small"
                   type="button"
-                  onClick={handleCopyAll}
+                  onClick={handleCopyResults}
                 >
                   {copyStatus === 'copied'
                     ? t('generator.copied')
                     : copyStatus === 'error'
                       ? t('generator.copyFailed')
                       : t('generator.copyAll')}
+                </Button>
+              </div>
+            )}
+
+            {hasResults && !hasMultipleResults && (
+              <div className="result-single-footer">
+                <Button
+                  className="result-copy-button"
+                  variant="secondary"
+                  size="small"
+                  type="button"
+                  onClick={handleCopyResults}
+                >
+                  {copyStatus === 'copied'
+                    ? t('generator.copied')
+                    : copyStatus === 'error'
+                      ? t('generator.copyFailed')
+                      : t('generator.copy')}
                 </Button>
               </div>
             )}

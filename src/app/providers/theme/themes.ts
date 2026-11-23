@@ -4,6 +4,13 @@ export const THEMES = {
   gold: { swatch: '#D7A84A' },
   ocean: { swatch: '#4DC7D5' },
   forest: { swatch: '#7CCB8E' },
+  violet: { swatch: '#B79AFF' },
+  graphite: { swatch: '#A8B6C6' },
+  mint: { swatch: '#63B995' },
+  sakura: { swatch: '#E58AA5' },
+  coffee: { swatch: '#C79568' },
+  emerald: { swatch: '#58C69A' },
+  lavender: { swatch: '#A997D5' },
 } as const;
 
 export type Theme = keyof typeof THEMES;

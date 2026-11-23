@@ -70,10 +70,11 @@
   flex-direction: column;
   gap: 1px;
   box-sizing: border-box;
-  margin: 4px 4px 4px 0;
-  padding-left: 3px;
+  margin-block: 4px;
+  margin-inline: 0 4px;
+  padding-inline-start: 3px;
 
-  border-left: 1px solid var(--color-border);
+  border-inline-start: 1px solid var(--color-border);
 }
 
 .ui-number-input .ui-number-input__stepper-button {

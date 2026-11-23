@@ -63,8 +63,9 @@
 
 .generator-count-input .ui-number-input__stepper {
   flex-basis: 22px;
-  margin: 3px 3px 3px 0;
-  padding-left: 2px;
+  margin-block: 3px;
+  margin-inline: 0 3px;
+  padding-inline-start: 2px;
 }
 
 .generator-count-input .ui-number-input__stepper-icon {
@@ -211,14 +212,22 @@
   margin-top: 10px;
 }
 
-.result-multiple-footer {
+.result-multiple-footer,
+.result-single-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   margin-top: 10px;
   padding-top: 9px;
   border-top: 1px solid var(--color-border);
+}
+
+.result-multiple-footer {
+  justify-content: space-between;
+}
+
+.result-single-footer {
+  justify-content: flex-end;
 }
 
 .result-multiple-count {

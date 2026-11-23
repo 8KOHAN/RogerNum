@@ -88,10 +88,8 @@ export function LanguageProvider({ children }: PropsWithChildren) {
 
   const setLanguage = useCallback(
     (nextLanguage: Language) => {
-      if (nextLanguage === language) {
-        return;
-      }
-
+      // Persist the choice even when it matches the current browser language.
+      // This makes an explicit selection take priority over future browser changes.
       userChangedLanguage.current = true;
       setLanguageState(nextLanguage);
 
@@ -99,11 +97,12 @@ export function LanguageProvider({ children }: PropsWithChildren) {
         // The selected language remains available for the current session.
       });
     },
-    [language],
+    [],
   );
 
   useEffect(() => {
-    document.documentElement.lang = language;
+    document.documentElement.lang = language.replace('_', '-');
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, [language]);
 
   const t = useCallback(
