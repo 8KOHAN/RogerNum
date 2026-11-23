@@ -1,3 +1,4 @@
+<img width="432" height="516" alt="Снимок экрана 2026-11-23 163200" src="https://github.com/user-attachments/assets/114bfb02-6a1c-4f05-a1a7-1594f141cfae" />
 # RogerNum
 
 **RogerNum** is an open-source browser extension for generating random numbers. It is built with React, TypeScript, and WXT.
@@ -13,9 +14,7 @@
 - Use the system light/dark appearance until a theme is selected manually.
 - Copy a generated number or the full list of generated numbers.
 
-
-<img width="437" height="523" alt="изображение" src="https://github.com/user-attachments/assets/710611bd-bf93-4048-859b-b91a7c46f9d0" />
-
+<img width="437" height="523" alt="изображение" src="https://github.com/user-attachments/assets/27a02b82-a612-45ac-a670-e8e0a94b7d1a" />
 
 ## Development
 
