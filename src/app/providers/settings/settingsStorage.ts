@@ -12,11 +12,15 @@ export const LANGUAGE_STORAGE_KEY = 'roger-num:language';
 export const PREFERENCES_STORAGE_KEY = 'roger-num:preferences';
 export const MULTIPLE_NUMBERS_ENABLED_STORAGE_KEY =
   'roger-num:multiple-numbers-enabled';
+export const RANGE_MIN_STORAGE_KEY = 'roger-num:range-min';
+export const RANGE_MAX_STORAGE_KEY = 'roger-num:range-max';
 
 export const USER_SETTINGS_STORAGE_KEYS = {
   theme: THEME_STORAGE_KEY,
   language: LANGUAGE_STORAGE_KEY,
   multipleNumbersEnabled: MULTIPLE_NUMBERS_ENABLED_STORAGE_KEY,
+  rangeMin: RANGE_MIN_STORAGE_KEY,
+  rangeMax: RANGE_MAX_STORAGE_KEY,
 } as const;
 
 const STORAGE_KEY_LIST = Object.values(USER_SETTINGS_STORAGE_KEYS);
@@ -27,6 +31,8 @@ export interface UserSettings {
   theme: Theme;
   language: Language;
   multipleNumbersEnabled: boolean;
+  rangeMin: string;
+  rangeMax: string;
 }
 
 export type UserSettingsPatch = Partial<UserSettings>;
@@ -37,6 +43,16 @@ const changeListeners = new Set<UserSettingsChangeListener>();
 let initializationPromise: Promise<void> | null = null;
 let writeQueue: Promise<void> = Promise.resolve();
 let storageListenerRegistered = false;
+
+function getSystemTheme(): Theme {
+  try {
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : DEFAULT_THEME;
+  } catch {
+    return DEFAULT_THEME;
+  }
+}
 
 function getBrowserLanguage(): Language {
   const browserLanguage =
@@ -95,9 +111,11 @@ export function getInitialUserSettings(): UserSettings {
   const storedLanguage = readLocalStorageValue(LANGUAGE_STORAGE_KEY);
 
   return {
-    theme: isTheme(storedTheme) ? storedTheme : DEFAULT_THEME,
+    theme: isTheme(storedTheme) ? storedTheme : getSystemTheme(),
     language: isLanguage(storedLanguage) ? storedLanguage : getBrowserLanguage(),
     multipleNumbersEnabled: readLegacyMultipleNumbersEnabled() ?? false,
+    rangeMin: readLocalStorageValue(RANGE_MIN_STORAGE_KEY) ?? '1',
+    rangeMax: readLocalStorageValue(RANGE_MAX_STORAGE_KEY) ?? '100',
   };
 }
 
@@ -117,13 +135,20 @@ function normalizeStoredSettings(record: StorageRecord): UserSettings {
       typeof storedMultipleNumbersEnabled === 'boolean'
         ? storedMultipleNumbersEnabled
         : initialSettings.multipleNumbersEnabled,
+    rangeMin: typeof record[USER_SETTINGS_STORAGE_KEYS.rangeMin] === 'string'
+      ? record[USER_SETTINGS_STORAGE_KEYS.rangeMin] as string
+      : initialSettings.rangeMin,
+    rangeMax: typeof record[USER_SETTINGS_STORAGE_KEYS.rangeMax] === 'string'
+      ? record[USER_SETTINGS_STORAGE_KEYS.rangeMax] as string
+      : initialSettings.rangeMax,
   };
 }
 
 function writeLocalStorageSnapshot(settings: UserSettings): void {
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, settings.theme);
     localStorage.setItem(LANGUAGE_STORAGE_KEY, settings.language);
+    localStorage.setItem(RANGE_MIN_STORAGE_KEY, settings.rangeMin);
+    localStorage.setItem(RANGE_MAX_STORAGE_KEY, settings.rangeMax);
     localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({ multipleNumbersEnabled: settings.multipleNumbersEnabled }),
@@ -151,12 +176,30 @@ function handleStorageChanges(
 
   if (USER_SETTINGS_STORAGE_KEYS.theme in changes) {
     const value = changes[USER_SETTINGS_STORAGE_KEYS.theme]?.newValue;
-    patch.theme = isTheme(value) ? value : DEFAULT_THEME;
+    patch.theme = isTheme(value) ? value : getSystemTheme();
   }
 
   if (USER_SETTINGS_STORAGE_KEYS.language in changes) {
     const value = changes[USER_SETTINGS_STORAGE_KEYS.language]?.newValue;
     patch.language = isLanguage(value) ? value : getBrowserLanguage();
+  }
+
+  if (USER_SETTINGS_STORAGE_KEYS.rangeMin in changes) {
+    const value = changes[USER_SETTINGS_STORAGE_KEYS.rangeMin]?.newValue;
+    patch.rangeMin = typeof value === 'string' ? value : '1';
+  }
+
+  if (USER_SETTINGS_STORAGE_KEYS.rangeMax in changes) {
+    const value = changes[USER_SETTINGS_STORAGE_KEYS.rangeMax]?.newValue;
+    patch.rangeMax = typeof value === 'string' ? value : '100';
+  }
+
+  if (USER_SETTINGS_STORAGE_KEYS.theme in changes) {
+    const value = changes[USER_SETTINGS_STORAGE_KEYS.theme]?.newValue;
+    try {
+      if (isTheme(value)) localStorage.setItem(THEME_STORAGE_KEY, value);
+      else localStorage.removeItem(THEME_STORAGE_KEY);
+    } catch { /* Browser Storage remains the source of truth. */ }
   }
 
   if (USER_SETTINGS_STORAGE_KEYS.multipleNumbersEnabled in changes) {
@@ -191,11 +234,22 @@ async function initializeBrowserStorage(): Promise<void> {
   const migration: StorageRecord = {};
 
   if (!isTheme(stored[USER_SETTINGS_STORAGE_KEYS.theme])) {
-    migration[USER_SETTINGS_STORAGE_KEYS.theme] = legacySettings.theme;
+    const legacyTheme = readLocalStorageValue(THEME_STORAGE_KEY);
+    if (isTheme(legacyTheme)) {
+      migration[USER_SETTINGS_STORAGE_KEYS.theme] = legacyTheme;
+    }
   }
 
   if (!isLanguage(stored[USER_SETTINGS_STORAGE_KEYS.language])) {
     migration[USER_SETTINGS_STORAGE_KEYS.language] = legacySettings.language;
+  }
+
+  if (typeof stored[USER_SETTINGS_STORAGE_KEYS.rangeMin] !== 'string') {
+    migration[USER_SETTINGS_STORAGE_KEYS.rangeMin] = legacySettings.rangeMin;
+  }
+
+  if (typeof stored[USER_SETTINGS_STORAGE_KEYS.rangeMax] !== 'string') {
+    migration[USER_SETTINGS_STORAGE_KEYS.rangeMax] = legacySettings.rangeMax;
   }
 
   if (
@@ -232,6 +286,15 @@ export async function getUserSettings(): Promise<UserSettings> {
     const stored = (await browser.storage.local.get(STORAGE_KEY_LIST)) as StorageRecord;
     const settings = normalizeStoredSettings(stored);
     writeLocalStorageSnapshot(settings);
+    try {
+      if (isTheme(stored[THEME_STORAGE_KEY])) {
+        localStorage.setItem(THEME_STORAGE_KEY, stored[THEME_STORAGE_KEY] as Theme);
+      } else {
+        localStorage.removeItem(THEME_STORAGE_KEY);
+      }
+    } catch {
+      // Browser Storage remains the source of truth.
+    }
     return settings;
   } catch {
     return getInitialUserSettings();
@@ -253,6 +316,16 @@ function createStoragePatch(patch: UserSettingsPatch): StorageRecord {
       throw new TypeError('Invalid language value.');
     }
     storagePatch[USER_SETTINGS_STORAGE_KEYS.language] = patch.language;
+  }
+
+  if (patch.rangeMin !== undefined) {
+    if (typeof patch.rangeMin !== 'string') throw new TypeError('Invalid rangeMin value.');
+    storagePatch[USER_SETTINGS_STORAGE_KEYS.rangeMin] = patch.rangeMin;
+  }
+
+  if (patch.rangeMax !== undefined) {
+    if (typeof patch.rangeMax !== 'string') throw new TypeError('Invalid rangeMax value.');
+    storagePatch[USER_SETTINGS_STORAGE_KEYS.rangeMax] = patch.rangeMax;
   }
 
   if (patch.multipleNumbersEnabled !== undefined) {
@@ -285,6 +358,9 @@ export function updateUserSettings(
       ...patch,
     };
     writeLocalStorageSnapshot(nextLocalSnapshot);
+    if (patch.theme !== undefined) {
+      try { localStorage.setItem(THEME_STORAGE_KEY, patch.theme); } catch { /* Ignore cache failures. */ }
+    }
     notifyListeners(patch);
   });
 
@@ -305,4 +381,16 @@ export function subscribeToUserSettings(
   return () => {
     changeListeners.delete(listener);
   };
+}
+
+/** Returns the explicitly selected theme, or null when the OS theme should be used. */
+export async function getStoredTheme(): Promise<Theme | null> {
+  await ensureStorageChangeListener();
+  try {
+    const stored = (await browser.storage.local.get(THEME_STORAGE_KEY)) as StorageRecord;
+    return isTheme(stored[THEME_STORAGE_KEY]) ? stored[THEME_STORAGE_KEY] : null;
+  } catch {
+    const legacyTheme = readLocalStorageValue(THEME_STORAGE_KEY);
+    return isTheme(legacyTheme) ? legacyTheme : null;
+  }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 
 import {
   generateNumber,
@@ -11,6 +11,7 @@ import {
 import { useTheme } from '../../../app/providers/theme/ThemeProvider';
 import { useI18n, type TranslationKey } from '../../../app/providers/i18n';
 import { usePreferences } from '../../../app/providers/preferences';
+import { getUserSettings, subscribeToUserSettings, updateUserSettings } from '../../../app/providers/settings';
 import { Button, Card, FormField, NumberInput } from '../../../shared/ui';
 
 import './GenerateNumberForm.css';
@@ -42,6 +43,26 @@ export function GenerateNumberForm() {
   const [results, setResults] = useState<number[] | null>(null);
   const [error, setError] = useState<FormErrorCode | null>(null);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
+  const rangeWasEdited = useRef(false);
+
+  useEffect(() => {
+    let isActive = true;
+    const unsubscribe = subscribeToUserSettings((patch) => {
+      if (patch.rangeMin !== undefined && !rangeWasEdited.current) setMinValue(patch.rangeMin);
+      if (patch.rangeMax !== undefined && !rangeWasEdited.current) setMaxValue(patch.rangeMax);
+    });
+
+    void getUserSettings().then((settings) => {
+      if (isActive && !rangeWasEdited.current) {
+        setMinValue(settings.rangeMin);
+        setMaxValue(settings.rangeMax);
+      }
+    }).catch(() => {
+      // Keep the default range if persistent storage is unavailable.
+    });
+
+    return () => { isActive = false; unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     if (!multipleNumbersEnabled && results !== null && results.length > 1) {
@@ -119,7 +140,6 @@ export function GenerateNumberForm() {
       }
 
       await navigator.clipboard.writeText(results.join('\n'));
-      setCopyStatus('copied');
     } catch {
       setCopyStatus('error');
     }

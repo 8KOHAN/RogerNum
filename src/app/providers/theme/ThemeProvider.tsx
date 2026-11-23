@@ -12,6 +12,7 @@ import {
 
 import {
   getInitialUserSettings,
+  getStoredTheme,
   getUserSettings,
   subscribeToUserSettings,
   updateUserSettings,
@@ -31,44 +32,51 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   );
   const userChangedTheme = useRef(false);
   const receivedStoredTheme = useRef(false);
+  const hasExplicitTheme = useRef(false);
 
   useEffect(() => {
     let isActive = true;
 
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
     const unsubscribe = subscribeToUserSettings((patch) => {
       if (patch.theme !== undefined) {
+        hasExplicitTheme.current = true;
         receivedStoredTheme.current = true;
         setThemeState(patch.theme);
       }
     });
 
-    void getUserSettings()
-      .then((settings) => {
-        if (
-          isActive &&
-          !userChangedTheme.current &&
-          !receivedStoredTheme.current
-        ) {
-          setThemeState(settings.theme);
+    void Promise.all([getUserSettings(), getStoredTheme()])
+      .then(([, storedTheme]) => {
+        hasExplicitTheme.current = storedTheme !== null;
+        if (isActive && !userChangedTheme.current && !receivedStoredTheme.current) {
+          setThemeState(storedTheme ?? (mediaQuery.matches ? 'dark' : 'light'));
         }
       })
       .catch(() => {
         // Keep the synchronous bootstrap value if persistent storage is unavailable.
       });
 
+    const handleSystemThemeChange = (event: MediaQueryListEvent) => {
+      if (!hasExplicitTheme.current && !userChangedTheme.current) {
+        setThemeState(event.matches ? 'dark' : 'light');
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+
     return () => {
       isActive = false;
       unsubscribe();
+      mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
   }, []);
 
   const setTheme = useCallback(
     (nextTheme: Theme) => {
-      if (nextTheme === theme) {
-        return;
-      }
-
       userChangedTheme.current = true;
+      hasExplicitTheme.current = true;
       document.documentElement.dataset.themeChanging = 'true';
       setThemeState(nextTheme);
 
