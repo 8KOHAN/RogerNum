@@ -1,6 +1,6 @@
 {
-  "name": "rogernum",
-  "version": "1.0.0",
+  "name": "RogerNum",
+  "version": "1.0.1",
   "private": true,
   "description": "Open-source random number generator browser extension with 12 languages and 12 themes.",
   "type": "module",

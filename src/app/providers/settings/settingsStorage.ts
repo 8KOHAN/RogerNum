@@ -15,6 +15,7 @@ export const MULTIPLE_NUMBERS_ENABLED_STORAGE_KEY =
   'roger-num:multiple-numbers-enabled';
 export const RANGE_MIN_STORAGE_KEY = 'roger-num:range-min';
 export const RANGE_MAX_STORAGE_KEY = 'roger-num:range-max';
+export const NUMBER_COUNT_STORAGE_KEY = 'roger-num:number-count';
 
 export const USER_SETTINGS_STORAGE_KEYS = {
   theme: THEME_STORAGE_KEY,
@@ -22,6 +23,7 @@ export const USER_SETTINGS_STORAGE_KEYS = {
   multipleNumbersEnabled: MULTIPLE_NUMBERS_ENABLED_STORAGE_KEY,
   rangeMin: RANGE_MIN_STORAGE_KEY,
   rangeMax: RANGE_MAX_STORAGE_KEY,
+  numberCount: NUMBER_COUNT_STORAGE_KEY,
 } as const;
 
 const STORAGE_KEY_LIST = [
@@ -37,6 +39,7 @@ export interface UserSettings {
   multipleNumbersEnabled: boolean;
   rangeMin: string;
   rangeMax: string;
+  numberCount: string;
 }
 
 export type UserSettingsPatch = Partial<UserSettings>;
@@ -170,6 +173,7 @@ export function getInitialUserSettings(): UserSettings {
     multipleNumbersEnabled: readLegacyMultipleNumbersEnabled() ?? false,
     rangeMin: readLocalStorageValue(RANGE_MIN_STORAGE_KEY) ?? '1',
     rangeMax: readLocalStorageValue(RANGE_MAX_STORAGE_KEY) ?? '100',
+    numberCount: readLocalStorageValue(NUMBER_COUNT_STORAGE_KEY) ?? '5',
   };
 }
 
@@ -195,6 +199,9 @@ function normalizeStoredSettings(record: StorageRecord): UserSettings {
     rangeMax: typeof record[USER_SETTINGS_STORAGE_KEYS.rangeMax] === 'string'
       ? record[USER_SETTINGS_STORAGE_KEYS.rangeMax] as string
       : initialSettings.rangeMax,
+    numberCount: typeof record[USER_SETTINGS_STORAGE_KEYS.numberCount] === 'string'
+      ? record[USER_SETTINGS_STORAGE_KEYS.numberCount] as string
+      : initialSettings.numberCount,
   };
 }
 
@@ -202,6 +209,7 @@ function writeLocalStorageSnapshot(settings: UserSettings): void {
   try {
     localStorage.setItem(RANGE_MIN_STORAGE_KEY, settings.rangeMin);
     localStorage.setItem(RANGE_MAX_STORAGE_KEY, settings.rangeMax);
+    localStorage.setItem(NUMBER_COUNT_STORAGE_KEY, settings.numberCount);
     localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({ multipleNumbersEnabled: settings.multipleNumbersEnabled }),
@@ -263,6 +271,11 @@ function handleStorageChanges(
   if (USER_SETTINGS_STORAGE_KEYS.rangeMax in changes) {
     const value = changes[USER_SETTINGS_STORAGE_KEYS.rangeMax]?.newValue;
     patch.rangeMax = typeof value === 'string' ? value : '100';
+  }
+
+  if (USER_SETTINGS_STORAGE_KEYS.numberCount in changes) {
+    const value = changes[USER_SETTINGS_STORAGE_KEYS.numberCount]?.newValue;
+    patch.numberCount = typeof value === 'string' ? value : '5';
   }
 
   if (USER_SETTINGS_STORAGE_KEYS.theme in changes) {
@@ -354,6 +367,10 @@ async function initializeBrowserStorage(): Promise<void> {
     migration[USER_SETTINGS_STORAGE_KEYS.rangeMax] = legacySettings.rangeMax;
   }
 
+  if (typeof stored[USER_SETTINGS_STORAGE_KEYS.numberCount] !== 'string') {
+    migration[USER_SETTINGS_STORAGE_KEYS.numberCount] = legacySettings.numberCount;
+  }
+
   if (
     typeof stored[USER_SETTINGS_STORAGE_KEYS.multipleNumbersEnabled] !== 'boolean'
   ) {
@@ -443,6 +460,13 @@ function createStoragePatch(patch: UserSettingsPatch): StorageRecord {
   if (patch.rangeMax !== undefined) {
     if (typeof patch.rangeMax !== 'string') throw new TypeError('Invalid rangeMax value.');
     storagePatch[USER_SETTINGS_STORAGE_KEYS.rangeMax] = patch.rangeMax;
+  }
+
+  if (patch.numberCount !== undefined) {
+    if (typeof patch.numberCount !== 'string') {
+      throw new TypeError('Invalid numberCount value.');
+    }
+    storagePatch[USER_SETTINGS_STORAGE_KEYS.numberCount] = patch.numberCount;
   }
 
   if (patch.multipleNumbersEnabled !== undefined) {

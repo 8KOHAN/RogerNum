@@ -48,12 +48,15 @@ export function GenerateNumberForm() {
   const [maxValue, setMaxValue] = useState(
     () => getInitialUserSettings().rangeMax,
   );
-  const [countValue, setCountValue] = useState('5');
+  const [countValue, setCountValue] = useState(
+    () => getInitialUserSettings().numberCount,
+  );
   const [results, setResults] = useState<number[] | null>(null);
   const [error, setError] = useState<FormErrorCode | null>(null);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
   const rangeMinWasEdited = useRef(false);
   const rangeMaxWasEdited = useRef(false);
+  const numberCountWasEdited = useRef(false);
 
   useEffect(() => {
     let isActive = true;
@@ -63,6 +66,9 @@ export function GenerateNumberForm() {
       }
       if (patch.rangeMax !== undefined && !rangeMaxWasEdited.current) {
         setMaxValue(patch.rangeMax);
+      }
+      if (patch.numberCount !== undefined && !numberCountWasEdited.current) {
+        setCountValue(patch.numberCount);
       }
     });
 
@@ -76,6 +82,9 @@ export function GenerateNumberForm() {
       }
       if (!rangeMaxWasEdited.current) {
         setMaxValue(settings.rangeMax);
+      }
+      if (!numberCountWasEdited.current) {
+        setCountValue(settings.numberCount);
       }
     }).catch(() => {
       // Keep the default range if persistent storage is unavailable.
@@ -151,7 +160,11 @@ export function GenerateNumberForm() {
   };
 
   const handleCountChange = (value: string) => {
+    numberCountWasEdited.current = true;
     setCountValue(value);
+    void updateUserSettings({ numberCount: value }).catch(() => {
+      // Keep the edited value in the current form if persistent storage fails.
+    });
     setResults(null);
     setError(null);
     setCopyStatus('idle');
